@@ -4,6 +4,8 @@ Sort codes used by the saviours of Western Civilization who steadfastly refuse t
 
 Various parts contributed by K. Starosta, P. Voss, A. Chester, J. Williams, and F. Wu
 
+*This branch is only tested with ROOT v5.x. For newer versions, try the master branch.*
+
 ## Installation
 
 The install script `install.sh` is provided in an attempt to automate the compilation and installation process.  It also attempts to set up the proper environment variables in the `.bashrc` file.  Use at your own risk, I am not responsible for messing up your computer.

@@ -1,13 +1,13 @@
 CC = g++
-CFLAGS   = -g -O3 -Wall -fPIC  $(shell $(ROOT5SYS)/bin/root-config --cflags)
+CFLAGS   = -g -O3 -Wall -fPIC  $(shell $(ROOTSYS)/bin/root-config --cflags)
 
-ROOT5 =  $(shell $(ROOT5SYS)/bin/root-config --glibs)
+ROOT =  $(shell $(ROOTSYS)/bin/root-config --glibs)
 
 INC = -I$(TIPsort)/current/utils\
       -I$(TIPsort)/current/SFU-format\
       -I$(TIPsort)/current/midas/decoder\
       -I$(TIPsort)/current/midas/map\
-      -I$(ROOT5INC)
+      -I$(ROOTINC)
  
 BIN=$(TIPsort)/current/midas/state-machine
 

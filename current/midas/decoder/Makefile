@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS   = -O3 -Wall -fPIC
+CFLAGS   = -O3 -Wall -fPIC -std=c++11
 
 BIN = $(TIPsort)/current/midas/decoder
 

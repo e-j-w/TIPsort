@@ -1,11 +1,11 @@
 CC = g++
-CFLAGS   = -O3 -Wall -fPIC
+CFLAGS   = -O3 -Wall -fPIC -std=c++11
 
 BIN = $(TIPsort)/current/midas/map
 INC = -I$(TIPsort)/current/SFU-format\
       -I$(TIPsort)/current/midas/decoder\
       -I$(TIPsort)/current/utils\
-      -I$(ROOT5INC)
+      -I$(ROOTINC)
 MAP=map.o
 
 map:$(MAP)

@@ -4,27 +4,44 @@ Sort codes used by the saviours of Western Civilization who steadfastly refuse t
 
 Various parts contributed by K. Starosta, P. Voss, A. Chester, J. Williams, and F. Wu
 
-## Installation
+### Installation
 
-The install script `install.sh` is provided in an attempt to automate the compilation and installation process.  It also attempts to set up the proper environment variables in the `.bashrc` file.  Use at your own risk, I am not responsible for messing up your computer.
-
-### Manual Installation
-
-At the very least, ROOT (tested with v5.x) must be installed with environment variables set up properly.  Environment variable setup can be done by adding to your `.bashrc` (and then reloading the terminal):
+At the very least, ROOT (tested with v6.x) must be installed with environment variables set up properly.  Environment variable setup can be done by adding to your `.bashrc`:
 
 ```
 #ROOT configuration in .bashrc
-export ROOT5SYS=/path/to/root
-export ROOT5INC=$ROOT5SYS/include
-export ROOT5LIB=$ROOT5SYS/lib
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOT5LIB
+export ROOTSYS=/path/to/root
+export ROOTINC=$ROOTSYS/include
+export ROOTLIB=$ROOTSYS/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTLIB
 ```
 
-Once this is done, run `make` from the `current` directory.  If everything works (you will see a bazillion compiler warnings), programs should be placed in the `bin` directory (which needs to exist along with subdirectories `midas` and `sfu`), which you can then add to your path:
+Locate the base TIPsort directory (the one containing the `current` directory and this `README.md` file), and add it as an environment variable to your `.bashrc` (this variable is required during the build process):
 
 ```
 #TIPsort configuration in .bashrc
 export TIPsort=/path/to/TIPsort
+```
+
+Reload the terminal, and then prepare directories where the TIPsort binaries will be installed to:
+
+```
+mkdir $TIPsort/bin
+mkdir $TIPsort/bin/midas
+mkdir $TIPsort/bin/sfu
+```
+
+Go to the build directory and start the build process:
+
+```
+cd $TIPsort/current
+make
+```
+
+If everything works (you will see a bazillion compiler warnings), the TIPsort binaries should be placed in the `bin` directory, which you can then add to your path:
+
+```
+#TIPsort configuration in .bashrc
 export PATH=$PATH:$TIPsort/bin
 export PATH=$PATH:$TIPsort/bin/midas
 export PATH=$PATH:$TIPsort/bin/sfu

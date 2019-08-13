@@ -1,9 +1,9 @@
 CC = g++
-CFLAGS   = -O3 -Wall -fPIC
+CFLAGS   = -O3 -Wall -fPIC -std=c++11
 BIN = $(TIPsort)/current/SFU-format
 INC = -I$(TIPsort)/current/utils\
       -I$(TIPsort)/current/midas/decoder\
-      -I$(ROOT5INC)
+      -I$(ROOTINC)
 
 SFU-FORMAT=SFU-format.o SFU-decoder.o SFU-encoder.o
 

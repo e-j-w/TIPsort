@@ -186,6 +186,10 @@ all:
 	echo Making ECalABSuppGroupSumEGatedByGroup.
 	(cd  ECalABSuppGroupSumEGatedByGroup r && make -is clean && make && make -is clean && cd ..)
 	echo DONE: ECalABSuppGroupSumEGatedByGroup.
+	
+	echo Making ECalABSuppDSReconstructedSumEGatedPIDSumCorr.
+	(cd  ECalABSuppDSReconstructedSumEGatedPIDSumCorr r && make -is clean && make && make -is clean && cd ..)
+	echo DONE: ECalABSuppDSReconstructedSumEGatedPIDSumCorr.
 
 
 clean:
@@ -236,5 +240,6 @@ clean:
 	(cd ECalABSuppGroupSum              && make -is clean && cd ..)
 	(cd ECalABSuppSumEGated_Group             && make -is clean && cd ..)
 	(cd ECalABSuppGroupSumEGatedByGroup       && make -is clean && cd ..)
+	(cd ECalABSuppDSReconstructedSumEGatedPIDSumCorr       && make -is clean && cd ..)
 
 	rm -f *~

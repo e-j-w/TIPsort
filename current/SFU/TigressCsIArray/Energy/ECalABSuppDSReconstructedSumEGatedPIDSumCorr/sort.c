@@ -1,5 +1,14 @@
 #include "sort.h"
 /*=========================================================================*/
+double angleBetweenGammas(double * dir, double * dir2)
+{
+  double dp = dir[0]*dir2[0] + dir[1]*dir2[1] + dir[2]*dir2[2];
+  double mag1 = sqrt(dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2]);
+  double mag2 = sqrt(dir2[0]*dir2[0] + dir2[1]*dir2[1] + dir2[2]*dir2[2]);
+  double angle = acos(dp/(mag1*mag2)); //in radians
+  return angle*180/ 3.14159265359;
+}
+/*=========================================================================*/
 int analyze_data(raw_event *data)
 {
   cal_event* cev;
@@ -167,16 +176,16 @@ int analyze_data(raw_event *data)
                     
                     //construct unit vectors for gamma and residual (source) nucleus
                     for(int ind=0;ind<3;ind++)
-                      gamma_dir[ind]=cal_par->tg.tpos_xyz[pos][colAddBack][ind];
-                    vecMag=sqrt(gamma_dir[0]*gamma_dir[0] + gamma_dir[1]*gamma_dir[1] + gamma_dir[2]*gamma_dir[2]);
+                      gamma_dir[i][ind]=cal_par->tg.tpos_xyz[pos][colAddBack][ind];
+                    vecMag=sqrt(gamma_dir[i][0]*gamma_dir[i][0] + gamma_dir[i][1]*gamma_dir[i][1] + gamma_dir[i][2]*gamma_dir[i][2]);
                     for(int ind=0;ind<3;ind++)
-                      gamma_dir[ind]=gamma_dir[ind]/vecMag;//make unit vector for gamma ray
+                      gamma_dir[i][ind]=gamma_dir[i][ind]/vecMag;//make unit vector for gamma ray
                     vecMag=sqrt(res_p[0]*res_p[0] + res_p[1]*res_p[1] + res_p[2]*res_p[2]);
                     for(int ind=0;ind<3;ind++)
                       res_dir[ind]=res_p[ind]/vecMag;//make unit vector for residual nucleus
                     
                     //calculate ds
-                    ds=sqrt(1-(beta*beta)) / (1-(beta* (res_dir[0]*gamma_dir[0] + res_dir[1]*gamma_dir[1] + res_dir[2]*gamma_dir[2]) ));
+                    ds=sqrt(1-(beta*beta)) / (1-(beta* (res_dir[0]*gamma_dir[i][0] + res_dir[1]*gamma_dir[i][1] + res_dir[2]*gamma_dir[i][2]) ));
                     //ds=1+(beta* (res_dir[0]*gamma_dir[0] + res_dir[1]*gamma_dir[1] + res_dir[2]*gamma_dir[2]) );
                     
                     /*printf("ds: %f\n",ds);
@@ -196,7 +205,7 @@ int analyze_data(raw_event *data)
                     		printf("\nINFO DUMP\n---------\n");
 												printf("ds: %f\n",ds);
 												printf("Tigress pos: %i\n",pos);
-												printf("beta: %f, gamma_dir: [%f %f %f]\n",beta,gamma_dir[0],gamma_dir[1],gamma_dir[2]);
+												printf("beta: %f, gamma_dir: [%f %f %f]\n",beta,gamma_dir[i][0],gamma_dir[i][1],gamma_dir[i][2]);
 												printf("res_p: [%f %f %f] MeV/c\n",res_p[0],res_p[1],res_p[2]);
 												printf("res_pdir: [%f %f %f]\n",res_dir[0],res_dir[1],res_dir[2]);
 												printf("beam_p: [%f %f %f] MeV/c\n",beam_p[0],beam_p[1],beam_p[2]);
@@ -245,8 +254,13 @@ int analyze_data(raw_event *data)
 				                if(energy[j]>=0)
 				                  if(energy[j]<S32K)
 				                    if(ring[j]>0)
-				                      if(ring[j]<NRING)
-				                        hist[ring[j]][(int)(energy[j])]++;
+				                      if(ring[j]<NRING){
+                                double angle = angleBetweenGammas(gamma_dir[j],gamma_dir[i]);
+                                if((angle > 175.0)&&(angle < 185.0)){
+                                  hist[ring[j]][(int)(energy[j])]++;
+                                }
+                              }
+                                
 		                }
 		              gatehist[ring[i]][(int)(energy[i])]++;
 		              break;//don't double count
@@ -276,8 +290,8 @@ int main(int argc, char *argv[])
   
   if((argc!=7)&&(argc!=8))
     {
-      printf("TigressCsI_ECalABSuppDSReconstructedSumEGatedPID master_file_name supLow supHigh useCharge gateELow gateEHigh fudge_factor\n");
-      printf("Program attempts to generate energy gated gamma ray spectra with all events Doppler unshifted.  Energy gate values (gateEHigh, gateELow) should be specified in keV.\n");
+      printf("TigressCsI_ECalABSuppDSReconstructedSumEGatedPIDSumCorr master_file_name supLow supHigh useCharge gateELow gateEHigh fudge_factor\n");
+      printf("Program attempts to generate energy gated gamma ray spectra with all events Doppler unshifted, where gammas are retained only at 180 degrees respective to the gamma which falls in the gate.  Energy gate values (gateEHigh, gateELow) should be specified in keV.\n");
       printf("Relies on beam momentum and velocity values specified in calibration parameters (deltaU.par).  Doesn't work for transitions with lifetimes long enough for the residual nucleus to slow.\n");
       printf("fudge_factor is a multiplicative factor which will be applied to the computed value of the residual nucleus momentum, in order to account for slowing of the beam/compound in the reaction target.  If left empty, a value of 1.0 will be used.\n");
       printf("\nuseCharge should be set to 1 if charge is to be used instead of fitted amplitude, otherwise set to 0.\n");
@@ -433,7 +447,7 @@ int main(int argc, char *argv[])
   
   printf("\n");
   
-  sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0fgated.mca",avgGateE,gateWidth);
+  sprintf(FileName,"DS_ECalABSuppReconstructedSumCorr_c%.0f_w%.0fgated.mca",avgGateE,gateWidth);
   if((output=fopen(FileName,"w"))==NULL)
     {
       printf("ERROR!!! I cannot open the mca file!\n");
@@ -443,7 +457,7 @@ int main(int argc, char *argv[])
   fclose(output);
   printf("Gated spectrum saved to file: %s\n",FileName);
   
-  sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0fgate.mca",avgGateE,gateWidth);
+  sprintf(FileName,"DS_ECalABSuppReconstructedSumCorr_c%.0f_w%.0fgate.mca",avgGateE,gateWidth);
   if((output=fopen(FileName,"w"))==NULL)
     {
       printf("ERROR!!! I cannot open the mca file!\n");
@@ -453,7 +467,7 @@ int main(int argc, char *argv[])
   fclose(output);
   printf("Gate spectrum saved to file: %s\n",FileName);
   
-  sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0fproj.mca",avgGateE,gateWidth);
+  sprintf(FileName,"DS_ECalABSuppReconstructedSumCorr_c%.0f_w%.0fproj.mca",avgGateE,gateWidth);
   if((output=fopen(FileName,"w"))==NULL)
     {
       printf("ERROR!!! I cannot open the mca file!\n");

@@ -135,6 +135,14 @@ all:
 	(cd  ECalABSuppSumDSEGatedPID r && make -is clean && make && make -is clean && cd ..)
 	echo DONE: ECalABSuppSumDSEGatedPID.
 	
+	echo Making ECalABSuppSumDSEGated_Group.
+	(cd  ECalABSuppSumDSEGated_Group r && make -is clean && make && make -is clean && cd ..)
+	echo DONE: ECalABSuppSumDSEGated_Group.
+	
+	echo Making ECalABSuppSumDSEGated_GroupPID.
+	(cd  ECalABSuppSumDSEGated_GroupPID r && make -is clean && make && make -is clean && cd ..)
+	echo DONE: ECalABSuppSumDSEGated_GroupPID.
+	
 	echo Making DSECalABSuppSumEGated.
 	(cd  DSECalABSuppSumEGated r && make -is clean && make && make -is clean && cd ..)
 	echo DONE: DSECalABSuppSumEGated.
@@ -227,6 +235,8 @@ clean:
 	(cd ECalABSuppDSReconstructedSumEMultiGatedPID  && make -is clean && cd ..)
 	(cd ECalABSuppSumDSEGated  && make -is clean && cd ..)
 	(cd ECalABSuppSumDSEGatedPID  && make -is clean && cd ..)
+	(cd ECalABSuppSumDSEGated_Group  && make -is clean && cd ..)
+	(cd ECalABSuppSumDSEGated_GroupPID  && make -is clean && cd ..)
 	(cd DSECalABSuppSumEGated  && make -is clean && cd ..)
 	(cd DSECalABSuppSumEGatedPID  && make -is clean && cd ..)
 	(cd ECalABSuppSegDSReconstructedSum  && make -is clean && cd ..)

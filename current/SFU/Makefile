@@ -2,6 +2,10 @@ all:
 	echo Making Tigress.
 	(cd  Tigress && make -is clean && make && make -is clean && cd ..)
 	echo DONE: TIGRESS.
+
+	echo Making TigressRF.
+	(cd  TigressRF && make -is clean && make && make -is clean && cd ..)
+	echo DONE: TIGRESSRF.
 	
 	echo Making TigressCsIArray.
 	(cd  TigressCsIArray && make -is clean && make && make -is clean && cd ..)
@@ -41,6 +45,7 @@ all:
 
 clean:
 	(cd Tigress         && make -is clean && cd ..)
+	(cd TigressRF       && make -is clean && cd ..)
 	(cd TigressCsIArray && make -is clean && cd ..)
 	(cd TigressPINArray && make -is clean && cd ..)
 	(cd TigressBGO	    && make -is clean && cd ..)

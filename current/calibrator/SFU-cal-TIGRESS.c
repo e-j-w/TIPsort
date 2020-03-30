@@ -677,121 +677,121 @@ void calibrate_TIGRESS(raw_event *raw_event, TIGRESS_calibration_parameters *TIG
   /* TIGRESS core time calibration from the DAQ CFD */
   if(TIGRESS_cal_par->use_time_fit_tgr==0)
       if(raw_event->tg.h.Gefold>0)
-	for(pos=1;pos<NPOSTIGR;pos++)
-	  if((raw_event->tg.h.GeHP&(one<<(pos-1)))!=0)
-	    if(raw_event->tg.det[pos].h.Gefold>0)
-	      for(col=0;col<NCOL;col++)
-		if(TIGRESS_cal_par->ctflag[pos][col]==1)
-		  if(((raw_event->tg.det[pos].h.GeHP)&(one<<col))!=0)
-		    if(raw_event->tg.det[pos].ge[col].h.Tfold>0)
-		      if((raw_event->tg.det[pos].ge[col].h.THP&1)!=0)
-			{
-			  /* t = tcfd-ts */
-			  t=raw_event->tg.det[pos].ge[col].seg[0].cfd&0x00ffffff;
-			  t-=(raw_event->tg.det[pos].ge[col].seg[0].timestamp*16)&0x00ffffff;
-			  
-			  //set RF time only if RF is in the hit pattern
-			  if((raw_event->h.setupHP&RF_BIT)!=0)
-			    {
-			      trf=raw_event->rf.sin.t0;
-			      if(TIGRESS_cal_par->DoRFUnwrapping==1)
-				{
-				  func=(1.000*trf)-(RFphase+TIGRESS_cal_par->offset);
-				  a=fmod(t+TIGRESS_cal_par->shift,RFphase);
-				  if(a>func) trf+=RFphase;
-				}
-			    }
-			  //else set it to 0
-			  else
-			    trf=0.;
-			  
-			  /* overwrite rf time for test defined by CP */
-			  //trf=0.;
-			  
-			  /* t = tcfd-ts-trf+offset */
-			  t-=trf;
-			  t+=S16K;
+				for(pos=1;pos<NPOSTIGR;pos++)
+					if((raw_event->tg.h.GeHP&(one<<(pos-1)))!=0)
+						if(raw_event->tg.det[pos].h.Gefold>0)
+							for(col=0;col<NCOL;col++)
+								if(TIGRESS_cal_par->ctflag[pos][col]==1)
+									if(((raw_event->tg.det[pos].h.GeHP)&(one<<col))!=0)
+										if(raw_event->tg.det[pos].ge[col].h.Tfold>0)
+											if((raw_event->tg.det[pos].ge[col].h.THP&1)!=0)
+												{
+													/* t = tcfd-ts */
+													t=raw_event->tg.det[pos].ge[col].seg[0].cfd&0x00ffffff;
+													t-=(raw_event->tg.det[pos].ge[col].seg[0].timestamp*16)&0x00ffffff;
+													
+													//set RF time only if RF is in the hit pattern
+													if((raw_event->h.setupHP&RF_BIT)!=0)
+														{
+															trf=raw_event->rf.sin.t0;
+															if(TIGRESS_cal_par->DoRFUnwrapping==1)
+																{
+																	func=(1.000*trf)-(RFphase+TIGRESS_cal_par->offset);
+																	a=fmod(t+TIGRESS_cal_par->shift,RFphase);
+																	if(a>func) trf+=RFphase;
+																}
+														}
+													//else set it to 0
+													else
+														trf=0.;
+													
+													/* overwrite rf time for test defined by CP */
+													//trf=0.;
+													
+													/* t = tcfd-ts-trf+offset */
+													t-=trf;
+													t+=S16K;
 
-			  /* printf("traw: %d ts: %d trf: %f t-ts-trf+16K: %f\n",raw_event->tg.det[pos].ge[col].seg[0].cfd&0x00ffffff,(raw_event->tg.det[pos].ge[col].seg[0].timestamp*16)&0x00ffffff,trf,t); */
-			  /* getc(stdin); */
-			  
-			  ran=(double)rand()/(double)RAND_MAX-0.5;
-			  ren=t+ran;
-			  t=TIGRESS_cal_par->ct[pos][col][0]+TIGRESS_cal_par->ct[pos][col][1]*ren;
-			  
-			  if(t>0)
-			    if(t<S65K)
-			      {
-				TIGRESS_cal_ev->det[pos].ge[col].seg[0].T=t;
-				TIGRESS_cal_ev->det[pos].ge[col].h.FT++;
-				TIGRESS_cal_ev->det[pos].ge[col].h.THP|=1;
-				TIGRESS_cal_ev->det[pos].ge[col].ring=TIGRESS_cal_par->ring_map[pos][col];
-				TIGRESS_cal_ev->det[pos].hge.FT++;
-				TIGRESS_cal_ev->det[pos].hge.THP|=(one<<col);
-				TIGRESS_cal_ev->h.FT++;
-				TIGRESS_cal_ev->h.THP|=(one<<(pos-1));
-			      }			  
-			}
+													/* printf("traw: %d ts: %d trf: %f t-ts-trf+16K: %f\n",raw_event->tg.det[pos].ge[col].seg[0].cfd&0x00ffffff,(raw_event->tg.det[pos].ge[col].seg[0].timestamp*16)&0x00ffffff,trf,t); */
+													/* getc(stdin); */
+													
+													ran=(double)rand()/(double)RAND_MAX-0.5;
+													ren=t+ran;
+													t=TIGRESS_cal_par->ct[pos][col][0]+TIGRESS_cal_par->ct[pos][col][1]*ren;
+													
+													if(t>0)
+														if(t<S65K)
+															{
+																TIGRESS_cal_ev->det[pos].ge[col].seg[0].T=t;
+																TIGRESS_cal_ev->det[pos].ge[col].h.FT++;
+																TIGRESS_cal_ev->det[pos].ge[col].h.THP|=1;
+																TIGRESS_cal_ev->det[pos].ge[col].ring=TIGRESS_cal_par->ring_map[pos][col];
+																TIGRESS_cal_ev->det[pos].hge.FT++;
+																TIGRESS_cal_ev->det[pos].hge.THP|=(one<<col);
+																TIGRESS_cal_ev->h.FT++;
+																TIGRESS_cal_ev->h.THP|=(one<<(pos-1));
+															}			  
+												}
   /* end TIGRESS core time calibration from the DAQ CFD */
 
   /* TIGRESS core time calibration from the fit */
   if(TIGRESS_cal_par->use_time_fit_tgr==1)	   
     if(raw_event->tg.h.Gefold>0)
       for(pos=1;pos<NPOSTIGR;pos++)
-	if((raw_event->tg.h.GeHP&(one<<(pos-1)))!=0)
-	  if(raw_event->tg.det[pos].h.Gefold>0)
-	    for(col=0;col<NCOL;col++)
-	      if(TIGRESS_cal_par->ctflag[pos][col]==1)
-		if(((raw_event->tg.det[pos].h.GeHP)&(one<<col))!=0)
-		  {
-		    /* t=tfit*16 (in ADC units) */
-		    t=raw_event->tg.det[pos].ge[col].t0[0]*16; 
-		    //t=raw_event->tg.det[pos].ge[col].t0[0]; 
-		    
-		    //set RF time only if RF is in the hit pattern
-		    if((raw_event->h.setupHP&RF_BIT)!=0)
-		      {
-			trf=raw_event->rf.sin.t0;
-			
-			if(TIGRESS_cal_par->DoRFUnwrapping==1)
-			  {
-			    func=(1.000*trf)-(RFphase+TIGRESS_cal_par->offset);
-			    a=fmod(t+TIGRESS_cal_par->shift,RFphase);
-			    if(a>func) trf+=RFphase;
-			  }
-		      }
-		    //else set it to 0
-		    else
-		      trf=0.;
-		    
-		    /* t=tfit-trf+offset */
-		    t-=trf;
-		    t+=S16K;
+				if((raw_event->tg.h.GeHP&(one<<(pos-1)))!=0)
+					if(raw_event->tg.det[pos].h.Gefold>0)
+						for(col=0;col<NCOL;col++)
+							if(TIGRESS_cal_par->ctflag[pos][col]==1)
+								if(((raw_event->tg.det[pos].h.GeHP)&(one<<col))!=0)
+									{
+										/* t=tfit*16 (in ADC units) */
+										t=raw_event->tg.det[pos].ge[col].t0[0]*16; 
+										//t=raw_event->tg.det[pos].ge[col].t0[0]; 
+										
+										//set RF time only if RF is in the hit pattern
+										if((raw_event->h.setupHP&RF_BIT)!=0)
+											{
+												trf=raw_event->rf.sin.t0;
+												
+												if(TIGRESS_cal_par->DoRFUnwrapping==1)
+													{
+														func=(1.000*trf)-(RFphase+TIGRESS_cal_par->offset);
+														a=fmod(t+TIGRESS_cal_par->shift,RFphase);
+														if(a>func) trf+=RFphase;
+													}
+											}
+										//else set it to 0
+										else
+											trf=0.;
+										
+										/* t=tfit-trf+offset */
+										t-=trf;
+										t+=S16K;
 
-		    /* printf("trigger %d\n",raw_event->h.trig_num&0x7fffffff); */
-		    /* printf("tfit: %f traw: %f trf: %f t-trf+16K: %f\n",raw_event->tg.det[pos].ge[col].t0[0],raw_event->tg.det[pos].ge[col].t0[0]*16,trf,t); */
-		    /* getc(stdin); */
-		    
-		    ran=(double)rand()/(double)RAND_MAX-0.5;
-		    ren=t+ran;
-		    /* printf("ran %f ren %f\n",ran,ren); */
-		    t=TIGRESS_cal_par->ct[pos][col][0]+TIGRESS_cal_par->ct[pos][col][1]*ren;
-		    /* printf("cal t %f\n",t); */
-		    /* getc(stdin); */		    
+										/* printf("trigger %d\n",raw_event->h.trig_num&0x7fffffff); */
+										/* printf("tfit: %f traw: %f trf: %f t-trf+16K: %f\n",raw_event->tg.det[pos].ge[col].t0[0],raw_event->tg.det[pos].ge[col].t0[0]*16,trf,t); */
+										/* getc(stdin); */
+										
+										ran=(double)rand()/(double)RAND_MAX-0.5;
+										ren=t+ran;
+										/* printf("ran %f ren %f\n",ran,ren); */
+										t=TIGRESS_cal_par->ct[pos][col][0]+TIGRESS_cal_par->ct[pos][col][1]*ren;
+										/* printf("cal t %f\n",t); */
+										/* getc(stdin); */		    
 
-		    if(t>0)
-		      if(t<S65K)
-			{
-			  TIGRESS_cal_ev->det[pos].ge[col].seg[0].T=t;
-			  TIGRESS_cal_ev->det[pos].ge[col].h.FT++;
-			  TIGRESS_cal_ev->det[pos].ge[col].h.THP|=1;
-			  TIGRESS_cal_ev->det[pos].ge[col].ring=TIGRESS_cal_par->ring_map[pos][col];
-			  TIGRESS_cal_ev->det[pos].hge.FT++;
-			  TIGRESS_cal_ev->det[pos].hge.THP|=(one<<col);
-			  TIGRESS_cal_ev->h.FT++;
-			  TIGRESS_cal_ev->h.THP|=(one<<(pos-1));
-			}	
-		  }
+										if(t>0)
+											if(t<S65K)
+												{
+													TIGRESS_cal_ev->det[pos].ge[col].seg[0].T=t;
+													TIGRESS_cal_ev->det[pos].ge[col].h.FT++;
+													TIGRESS_cal_ev->det[pos].ge[col].h.THP|=1;
+													TIGRESS_cal_ev->det[pos].ge[col].ring=TIGRESS_cal_par->ring_map[pos][col];
+													TIGRESS_cal_ev->det[pos].hge.FT++;
+													TIGRESS_cal_ev->det[pos].hge.THP|=(one<<col);
+													TIGRESS_cal_ev->h.FT++;
+													TIGRESS_cal_ev->h.THP|=(one<<(pos-1));
+												}	
+									}
   /* end TIGRESS core time calibration from the waveform fit */
 
   /* TIGRESS energy+time hit patterns */

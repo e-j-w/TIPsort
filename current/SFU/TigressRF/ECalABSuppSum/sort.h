@@ -15,7 +15,7 @@
 int pos,col;
 double supLow,supHigh,rf_period;
 
-TH2D *h, *hrad;
+TH2D *h, *hrf, *hrad;
 
 calibration_parameters* cal_par;
 #endif

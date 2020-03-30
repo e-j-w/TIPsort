@@ -6,12 +6,10 @@ int analyze_data(raw_event *data)
 {
   cal_event* cev;
   double eAddBack=-1.;
-  double phaseRF=-1.;
+  double tAddBack=-1.;
+  double rfphaseAddBack=-1.;
   int suppFlag=0;
   int take=0;
-
-  memcpy(&phaseRF,&data->rf.sin.t0,sizeof(double)); //get the RF phase for this raw event (in CFD units)
-  phaseRF *= 0.625; //convert to ns
 
   cev=(cal_event*)malloc(sizeof(cal_event));
   memset(cev,0,sizeof(cal_event));
@@ -39,29 +37,33 @@ int analyze_data(raw_event *data)
                   //Run through four cores for each position
                   for(col=0;col<NCOL;col++)
                     {
-                    //Check if this color is indicated in the hit pattern
-                    if((cev->tg.det[pos].hge.HHP&(1<<col))!=0)
-                      //Check that this combination has a fold great than zero
-                      if(cev->tg.det[pos].ge[col].h.FH>0)
-                        //Check if this combination is indicated in the hit pattern
-                        if((cev->tg.det[pos].ge[col].h.HHP&1)!=0)
-                          //suppress if the position is in the map and has not yet been suppressed
-                          if(cev->tg.det[pos].ge[col].suppress>=supLow && cev->tg.det[pos].ge[col].suppress<=supHigh && take==0)
-                            {
-                              /* once suppression flag is set
-                              do not reset it, could remove the take bit
-                              and keep resetting suppFlag, but this
-                              is nicer */
-                              suppFlag=1;
-                              take=1;
-                            }
+                      //Check if this color is indicated in the hit pattern
+                      if((cev->tg.det[pos].hge.HHP&(1<<col))!=0)
+                        //Check that this combination has a fold great than zero
+                        if(cev->tg.det[pos].ge[col].h.FH>0)
+                          //Check if this combination is indicated in the hit pattern
+                          if((cev->tg.det[pos].ge[col].h.HHP&1)!=0)
+                            //suppress if the position is in the map and has not yet been suppressed
+                            if(cev->tg.det[pos].ge[col].suppress>=supLow && cev->tg.det[pos].ge[col].suppress<=supHigh && take==0)
+                              {
+                                /* once suppression flag is set
+                                do not reset it, could remove the take bit
+                                and keep resetting suppFlag, but this
+                                is nicer */
+                                suppFlag=1;
+                                take=1;
+                              }
                     }
                     if(suppFlag){
                       //eAddBack = cev->tg.det[pos].addback.E/cal_par->tg.contr_e;
                       eAddBack = cev->tg.det[pos].addback.E;
-                      h->Fill(eAddBack,phaseRF);
+                      tAddBack = cev->tg.det[pos].addback.T;
+                      rfphaseAddBack = fmod(tAddBack,rf_period);
+                      //printf("e: %f, t: %f, RF_t %f\n",eAddBack,tAddBack,fmod(tAddBack,rf_period));
+                      h->Fill(eAddBack,tAddBack);
                       if(rf_period > 0.){
-                        hrad->Fill(eAddBack,TWOPI*phaseRF/rf_period);
+                        hrf->Fill(eAddBack,rfphaseAddBack);
+                        hrad->Fill(eAddBack,rfphaseAddBack*TWOPI/rf_period);
                       }
                       
                     }
@@ -84,14 +86,16 @@ int main(int argc, char *argv[])
     {
       printf("TigressRF_ECalABSuppSum master_file_name supLow supHigh rf_period_ns\n");
       printf("Program sorts RF phase vs. ECalABSuppSum histograms for TIGRESS.\n");
-      printf("The RF period may be omitted, in which case the RF phase in radians will not be sorted, only the t0 in ns.\n");
+      printf("The RF period may be omitted, in which case a value of 84.84 ns will be assumed.\n");
       exit(-1);
     }
   
   printf("Program sorts RF phase vs. ECalABSuppSum histograms for TIGRESS.\n");
   
-  h = new TH2D("Tigress vs RF ns","Tigress vs RF ns",S4K,0,S8K-1,90,0,90-1);
+  h = new TH2D("Tigress E vs Tigress T","Tigress vs vs Tigress T",S4K,0,S8K-1,S4K,0,S16K-1);
   h->Reset();
+  hrf = new TH2D("Tigress vs RF ns","Tigress vs RF ns",S4K,0,S8K-1,90,0,90-1);
+  hrf->Reset();
   hrad = new TH2D("Tigress vs RF rad","Tigress vs RF rad",S4K,0,S8K-1,90,0,TWOPI);
   hrad->Reset();
 
@@ -112,7 +116,7 @@ int main(int argc, char *argv[])
       exit(-1);
     }  
   }else{
-    rf_period = -1.; //will be used to skip making an RF phase histogram
+    rf_period = 84.84; //will be used to skip making an RF phase histogram
   }
   
 
@@ -156,7 +160,7 @@ int main(int argc, char *argv[])
   TFile f(title, "recreate");
   h->GetXaxis()->SetTitle("TIGRESS Energy (keV)");
   h->GetXaxis()->CenterTitle(true);
-  h->GetYaxis()->SetTitle("Tigress RF t0 (ns)");
+  h->GetYaxis()->SetTitle("Tigress t-trf (ns)");
   h->GetYaxis()->CenterTitle(true);
   h->GetYaxis()->SetTitleOffset(1.5);
   h->SetOption("COLZ");
@@ -164,6 +168,13 @@ int main(int argc, char *argv[])
   h->Write();
 
   if(rf_period > 0.){
+    hrf->GetXaxis()->SetTitle("TIGRESS Energy (keV)");
+    hrf->GetXaxis()->CenterTitle(true);
+    hrf->GetYaxis()->SetTitle("Tigress RF phase (ns)");
+    hrf->GetYaxis()->CenterTitle(true);
+    hrf->GetYaxis()->SetTitleOffset(1.5);
+    hrf->SetOption("COLZ");
+    hrf->Write();
     hrad->GetXaxis()->SetTitle("TIGRESS Energy (keV)");
     hrad->GetXaxis()->CenterTitle(true);
     hrad->GetYaxis()->SetTitle("Tigress RF phase (rad)");

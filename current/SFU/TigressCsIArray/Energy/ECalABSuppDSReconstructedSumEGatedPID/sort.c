@@ -229,29 +229,43 @@ int analyze_data(raw_event *data)
     	printf("Addback fold = %i, number of events = %i\n",cev->tg.h.FA,i);
     }*/
   
+  int gInGate, gateGamma;
   for(i=0;i<cev->tg.h.FA;i++)
     {
+      gInGate = 0;
+      gateGamma = -1;
       //look for a gamma that falls into the gate
       if((energy[i]>=0)&&(energy[i]<S32K))
-        if(energy[i]>=gateELow/cal_par->tg.contr_e)
-	        if(energy[i]<=gateEHigh/cal_par->tg.contr_e)
-	          if(ring[i]>0)
-	          	if(ring[i]<NRING)
-		            {
-		              //add all gammas in the event that aren't the gamma that fell into the gate
-		              for(j=0;j<cev->tg.h.FA;j++)
-		              	{
-				              if(j!=i)
-				                if(energy[j]>=0)
-				                  if(energy[j]<S32K)
-				                    if(ring[j]>0)
-				                      if(ring[j]<NRING)
-				                        hist[ring[j]][(int)(energy[j])]++;
-		                }
-		              gatehist[ring[i]][(int)(energy[i])]++;
-		              break;//don't double count
-		            }
+        if(ring[i]>0)
+          if(ring[i]<NRING)
+            if((energy[i]>=gateELow/cal_par->tg.contr_e)&&(energy[i]<=gateEHigh/cal_par->tg.contr_e)){
+              gInGate = 1;
+              gateGamma = i;
+              break;
+            }
+      
     }
+
+  if(gInGate){
+    //add all gammas in the event that aren't the gamma that fell into the gate
+    for(j=0;j<cev->tg.h.FA;j++)
+  	  {
+          if(j!=gateGamma)
+            if(energy[j]>=0)
+              if(energy[j]<S32K)
+                if(ring[j]>0)
+                  if(ring[j]<NRING){
+                    if((energy[j]>=gateELow/cal_par->tg.contr_e)&&(energy[j]<=gateEHigh/cal_par->tg.contr_e)){
+                      hist[ring[gateGamma]][(int)(energy[gateGamma])]++; //done under-count
+                    }
+                    hist[ring[j]][(int)(energy[j])]++;
+                  }
+                    
+      }
+    //fill the gate hist
+    gatehist[ring[i]][(int)(energy[i])]++;
+  }
+  
   
   free(cev);
   free(energy);  

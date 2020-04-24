@@ -1,5 +1,37 @@
 #include "sort.h"
 /*=========================================================================*/
+int arePositionsAt180(int pos1, int pos2, int col1, int col2, int useAddBack){
+
+  if(useAddBack){
+    //angles are between clovers, not cores
+    col1=0;
+    col2=1;
+  }
+
+  double dp = cal_par->tg.tpos_xyz[pos1][col1][0]*cal_par->tg.tpos_xyz[pos2][col2][0];
+  dp += cal_par->tg.tpos_xyz[pos1][col1][1]*cal_par->tg.tpos_xyz[pos2][col2][1];
+  dp += cal_par->tg.tpos_xyz[pos1][col1][2]*cal_par->tg.tpos_xyz[pos2][col2][2];
+  double mag1 = cal_par->tg.tpos_xyz[pos1][col1][0]*cal_par->tg.tpos_xyz[pos1][col1][0];
+  mag1 += cal_par->tg.tpos_xyz[pos1][col1][1]*cal_par->tg.tpos_xyz[pos1][col1][1];
+  mag1 += cal_par->tg.tpos_xyz[pos1][col1][2]*cal_par->tg.tpos_xyz[pos1][col1][2];
+  mag1 = sqrt(mag1);
+  double mag2 = cal_par->tg.tpos_xyz[pos2][col2][0]*cal_par->tg.tpos_xyz[pos2][col2][0];
+  mag2 += cal_par->tg.tpos_xyz[pos2][col2][1]*cal_par->tg.tpos_xyz[pos2][col2][1];
+  mag2 += cal_par->tg.tpos_xyz[pos2][col2][2]*cal_par->tg.tpos_xyz[pos2][col2][2];
+  mag2 = sqrt(mag2);
+  
+  double ang = acos(dp/(mag1*mag2)); //from 0 to pi radians
+
+  //check if angle is close to 180 degrees
+  if(ang > 3.0916){
+    //printf("angle: %f, pos: %i %i, col: %i %i\n",ang,pos1,pos2,col1,col2);
+    return 1;
+  }
+  
+  return 0;
+}
+
+
 int analyze_data(raw_event *data)
 {
   cal_event* cev;
@@ -13,7 +45,7 @@ int analyze_data(raw_event *data)
   int type;
   
   double* energy;
-  int* ring;
+  int *ring, *tigPos, *tigCol;
   int i=0;//counter for number of hits processed
   int j=0;
   
@@ -28,6 +60,8 @@ int analyze_data(raw_event *data)
   
   energy=(double*)calloc(cev->tg.h.FA,sizeof(double));
   ring=(int*)calloc(cev->tg.h.FA,sizeof(int));
+  tigPos=(int*)calloc(cev->tg.h.FA,sizeof(int));
+  tigCol=(int*)calloc(cev->tg.h.FA,sizeof(int));
   
   
   //get beam momentum value from calibration (energy specified in parameter file)
@@ -212,6 +246,8 @@ int analyze_data(raw_event *data)
                     
                     energy[i]=eAddBack;
                     ring[i] = cev->tg.det[pos].ge[colAddBack].ring+NRING*suppFlag;
+                    tigPos[i] = pos;
+                    tigCol[i] = colAddBack;
                     
                     if(eAddBack>=0 && eAddBack<S32K)
                     	projhist[ring[i]][(int)(energy[i])]++;
@@ -255,10 +291,12 @@ int analyze_data(raw_event *data)
               if(energy[j]<S32K)
                 if(ring[j]>0)
                   if(ring[j]<NRING){
-                    if((energy[j]>=gateELow/cal_par->tg.contr_e)&&(energy[j]<=gateEHigh/cal_par->tg.contr_e)){
-                      hist[ring[gateGamma]][(int)(energy[gateGamma])]++; //don't under-count
+                    if(arePositionsAt180(tigPos[gateGamma], tigPos[j], tigCol[gateGamma], tigCol[j],1)){
+                      if((energy[j]>=gateELow/cal_par->tg.contr_e)&&(energy[j]<=gateEHigh/cal_par->tg.contr_e)){
+                        hist[ring[gateGamma]][(int)(energy[gateGamma])]++; //don't under-count
+                      }
+                      hist[ring[j]][(int)(energy[j])]++;
                     }
-                    hist[ring[j]][(int)(energy[j])]++;
                   }
                     
       }
@@ -270,6 +308,8 @@ int analyze_data(raw_event *data)
   free(cev);
   free(energy);  
   free(ring);
+  free(tigPos);
+  free(tigCol);
   return SEPARATOR_DISCARD;
 }
 /*=========================================================================*/
@@ -290,8 +330,8 @@ int main(int argc, char *argv[])
   
   if((argc!=7)&&(argc!=8))
     {
-      printf("TigressCsI_ECalABSuppDSReconstructedSumEGatedPID master_file_name supLow supHigh useCharge gateELow gateEHigh fudge_factor\n");
-      printf("Program attempts to generate energy gated gamma ray spectra with all events Doppler unshifted.  Energy gate values (gateEHigh, gateELow) should be specified in keV.\n");
+      printf("TigressCsI_ECalABSuppDSReconstructedSumEGatedPID180 master_file_name supLow supHigh useCharge gateELow gateEHigh fudge_factor\n");
+      printf("Program attempts to generate energy gated gamma ray spectra with all events Doppler unshifted, taking only gammas at 180 degrees with respect to the gamma in the energy gate.  Energy gate values (gateEHigh, gateELow) should be specified in keV.\n");
       printf("Relies on beam momentum and velocity values specified in calibration parameters (deltaU.par).  Doesn't work for transitions with lifetimes long enough for the residual nucleus to slow.\n");
       printf("fudge_factor is a multiplicative factor which will be applied to the computed value of the residual nucleus momentum, in order to account for slowing of the beam/compound in the reaction target.  If left empty, a value of 1.0 will be used.\n");
       printf("\nuseCharge should be set to 1 if charge is to be used instead of fitted amplitude, otherwise set to 0.\n");
@@ -447,7 +487,7 @@ int main(int argc, char *argv[])
   
   printf("\n");
   
-  sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0fgated.mca",avgGateE,gateWidth);
+  sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0f_180gated.mca",avgGateE,gateWidth);
   if((output=fopen(FileName,"w"))==NULL)
     {
       printf("ERROR!!! I cannot open the mca file!\n");

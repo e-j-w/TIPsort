@@ -27,6 +27,10 @@ all:
 	(cd TigressTTCalDiffFirstHit && make -is clean && make && make -is clean && cd ..)
 	echo DONE: Separator_TigressTTCalDiffFirstHit.
 	
+	echo Making Separator_TigressTTCalDiffDropOutliers.
+	(cd TigressTTCalDiffDropOutliers && make -is clean && make && make -is clean && cd ..)
+	echo DONE: Separator_TigressTTCalDiffDropOutliers.
+	
 	echo Making Separator_TigressTTCalDiffCentralValue.
 	(cd TigressTTCalDiffCentralValue && make -is clean && make && make -is clean && cd ..)
 	echo DONE: Separator_TigressTTCalDiffCentralValue.
@@ -42,6 +46,10 @@ all:
 	echo Making Separator_CsITTCalDiffFirstHit.
 	(cd CsITTCalDiffFirstHit && make -is clean && make && make -is clean && cd ..)
 	echo DONE: Separator_CsITTCalDiffFirstHit.
+	
+	echo Making Separator_CsITTCalDiffDropOutliers.
+	(cd CsITTCalDiffDropOutliers && make -is clean && make && make -is clean && cd ..)
+	echo DONE: Separator_CsITTCalDiffDropOutliers.
 	
 	echo Making Separator_CsITTCalDiffCentralValue.
 	(cd CsITTCalDiffCentralValue && make -is clean && make && make -is clean && cd ..)
@@ -62,6 +70,10 @@ all:
 	echo Making Separator_TigressCsITTCalFirstHitDiffCentralValue.
 	(cd TigressCsITTCalFirstHitDiffCentralValue && make -is clean && make && make -is clean && cd ..)
 	echo DONE: Separator_TigressCsITTCalFirstHitDiffCentralValue.
+	
+	echo Making Separator_TigressCsITTCalDropOutliers.
+	(cd TigressCsITTCalDropOutliers && make -is clean && make && make -is clean && cd ..)
+	echo DONE: Separator_TigressCsITTCalDropOutliers.
 	
 	#echo Making Separator_TigressCsITTCalDiff_firstEvent.
 	#(cd TigressCsITTCalDiff_firstEvent && make -is clean && make && make -is clean && cd ..)

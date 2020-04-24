@@ -200,11 +200,11 @@ all:
 	echo DONE: ECalABSuppDSReconstructedSumEGatedPIDSumCorr.
 	
 	echo Making ECalABSuppDSReconstructedSumEGatedPID180.
-	(cd  ECalABSuppDSReconstructedSumEGatedPID180 r && make -is clean && make && make -is clean && cd ..)
+	(cd  ECalABSuppDSReconstructedSumEGatedPID180 && make -is clean && make && make -is clean && cd ..)
 	echo DONE: ECalABSuppDSReconstructedSumEGatedPID180.
 	
 	echo Making ECalABSuppDSReconstructedSumEGatedPID180_2ndGate.
-	(cd  ECalABSuppDSReconstructedSumEGatedPID180_2ndGate r && make -is clean && make && make -is clean && cd ..)
+	(cd  ECalABSuppDSReconstructedSumEGatedPID180_2ndGate && make -is clean && make && make -is clean && cd ..)
 	echo DONE: ECalABSuppDSReconstructedSumEGatedPID180_2ndGate.
 
 

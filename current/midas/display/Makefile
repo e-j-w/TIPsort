@@ -1,6 +1,6 @@
 all:
 	echo Making display_rawEvent.
-	(cd rawEvent r && make -is clean && make  && make -is clean && cd ..)
+	(cd rawEvent && make -is clean && make  && make -is clean && cd ..)
 	echo DONE: RAWEVENT
 
 clean:

@@ -1,6 +1,6 @@
 all:
 	echo Making Energy.
-	(cd Energy r && make -is clean && make && make -is clean && cd ..)
+	(cd Energy && make -is clean && make && make -is clean && cd ..)
 	echo DONE: TIGRESS_ENERGY.
 
 clean:

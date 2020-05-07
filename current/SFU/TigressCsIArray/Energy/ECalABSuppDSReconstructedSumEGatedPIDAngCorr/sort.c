@@ -1,5 +1,30 @@
 #include "sort.h"
 /*=========================================================================*/
+int getAngBin(double angleDeg){
+
+  if((angleDeg > 181.)||(angleDeg < -0.1))
+    return 99;
+
+  int i;
+  for(i=0;i<numAngBins;i++){
+    if(i<99){
+      if(fabs(angleDeg-angleList[i]) < 0.001){
+        return i;
+      }
+    }else{
+      return 99;
+    }
+  }
+  //if we get here, then the bin doesn't exist yet
+  if(numAngBins<99){
+    //make a new bin
+    angleList[numAngBins]=angleDeg;
+    numAngBins++;
+    return numAngBins-1;
+  }else{
+    return 99;
+  }
+}
 
 double getAngDeg(int pos1, int pos2, int col1, int col2, int useAddBack){
 
@@ -38,18 +63,6 @@ double getAngDeg(int pos1, int pos2, int col1, int col2, int useAddBack){
   ang = ang*360.0/TWOPI;
   
   return ang;
-}
-
-int arePositionsAt180(int pos1, int pos2, int col1, int col2, int useAddBack){
-
-  double ang = getAngDeg(pos1,pos2,col1,col2,useAddBack); //in degrees
-
-  //check if angle is close to 180 degrees
-  if(ang > 179.){
-    //printf("angle: %f, pos: %i %i, col: %i %i\n",ang,pos1,pos2,col1,col2);
-    return 1;
-  }
-  return 0;
 }
 
 
@@ -270,8 +283,8 @@ int analyze_data(raw_event *data)
                     tigPos[i] = pos;
                     tigCol[i] = colAddBack;
                     
-                    if(eAddBack>=0 && eAddBack<S32K)
-                    	projhist[ring[i]][(int)(energy[i])]++;
+                    //if(eAddBack>=0 && eAddBack<S32K)
+                    //	projhist[ring[i]][(int)(energy[i])]++;
                     
                     i++;//increment event counter
                     //h->Fill(ds);
@@ -312,17 +325,22 @@ int analyze_data(raw_event *data)
               if(energy[j]<S32K)
                 if(ring[j]>0)
                   if(ring[j]<NRING){
-                    if(arePositionsAt180(tigPos[gateGamma], tigPos[j], tigCol[gateGamma], tigCol[j],1)){
-                      if((energy[j]>=gateELow/cal_par->tg.contr_e)&&(energy[j]<=gateEHigh/cal_par->tg.contr_e)){
-                        hist[ring[gateGamma]][(int)(energy[gateGamma])]++; //don't under-count
-                      }
-                      hist[ring[j]][(int)(energy[j])]++;
+                    double corrAng = getAngDeg(tigPos[gateGamma], tigPos[j], tigCol[gateGamma], tigCol[j],useAddBack);
+                    //printf("Angle: %f\n",getAngDeg(tigPos[gateGamma], tigPos[j], tigCol[gateGamma], tigCol[j],0));
+                    //h->Fill(getAngDeg(tigPos[gateGamma], tigPos[j], tigCol[gateGamma], tigCol[j],0));
+                    if(fabs(28.21-corrAng) < 0.01){
+                      printf("pos1: %i, pos2: %i, col1: %i, col2: %i\n",tigPos[gateGamma], tigPos[j], tigCol[gateGamma], tigCol[j]);
+                      getc(stdin);
                     }
+                    if((energy[j]>=gateELow/cal_par->tg.contr_e)&&(energy[j]<=gateEHigh/cal_par->tg.contr_e)){
+                      hist[getAngBin(corrAng)][(int)(energy[gateGamma])]++; //don't under-count
+                    }
+                    hist[getAngBin(corrAng)][(int)(energy[j])]++;
                   }
                     
       }
     //fill the gate hist
-    gatehist[ring[i]][(int)(energy[i])]++;
+    //gatehist[ring[i]][(int)(energy[i])]++;
   }
   
   
@@ -349,10 +367,10 @@ int main(int argc, char *argv[])
   double avgGateE;
   double gateWidth;
   
-  if((argc!=7)&&(argc!=8))
+  if((argc!=8)&&(argc!=9))
     {
-      printf("TigressCsI_ECalABSuppDSReconstructedSumEGatedPID180 master_file_name supLow supHigh useCharge gateELow gateEHigh fudge_factor\n");
-      printf("Program attempts to generate energy gated gamma ray spectra with all events Doppler unshifted, taking only gammas at 180 degrees with respect to the gamma in the energy gate.  Energy gate values (gateEHigh, gateELow) should be specified in keV.\n");
+      printf("TigressCsI_ECalSuppDSReconstructedSumEGatedPIDAngCorr master_file_name supLow supHigh useCharge useAddBack gateELow gateEHigh fudge_factor\n");
+      printf("Program generates energy gated gamma ray spectra with all events Doppler unshifted, saving spectra for each of the unique angles between gamma rays, for use in gamma-gamma angular correlation analysis.  Energy gate values (gateEHigh, gateELow) should be specified in keV.\n");
       printf("Relies on beam momentum and velocity values specified in calibration parameters (deltaU.par).  Doesn't work for transitions with lifetimes long enough for the residual nucleus to slow.\n");
       printf("fudge_factor is a multiplicative factor which will be applied to the computed value of the residual nucleus momentum, in order to account for slowing of the beam/compound in the reaction target.  If left empty, a value of 1.0 will be used.\n");
       printf("\nuseCharge should be set to 1 if charge is to be used instead of fitted amplitude, otherwise set to 0.\n");
@@ -360,9 +378,11 @@ int main(int argc, char *argv[])
       exit(-1);
     }
   
-  //h = new TH1D("DSHistogram","DsHistogram",100,0.95,1.05);
+  //h = new TH1D("AngleHistogram","AngleHistogram",1024,-1,181);
   //h->Reset();
   
+  numAngBins = 0;
+
   printf("Program attempts to generate energy gated gamma ray spectra with all events Doppler unshifted.\n");
   
   name=(input_names_type*)malloc(sizeof(input_names_type));
@@ -379,10 +399,11 @@ int main(int argc, char *argv[])
   supLow = atof(argv[2]);
   supHigh = atof(argv[3]);
   useCharge = atoi(argv[4]);
-  gateELow = atof(argv[5]);
-  gateEHigh = atof(argv[6]);
-  if(argc==8)
-  	fudgeFactor = atof(argv[7]);
+  useAddBack = atof(argv[5]);
+  gateELow = atof(argv[6]);
+  gateEHigh = atof(argv[7]);
+  if(argc==9)
+  	fudgeFactor = atof(argv[8]);
   else
   	fudgeFactor = 1.0;
   
@@ -490,8 +511,13 @@ int main(int argc, char *argv[])
 	printf("  Beam energy: %f MeV\n",cal_par->csiarray.Ebeam);
 	printf("  Projectile mass: %f MeV/c^2\n",cal_par->csiarray.mproj);
 	printf("  Residual mass: %f MeV/c^2\n",cal_par->csiarray.mr);
+  if(useAddBack){
+    printf("  Using addback.\n");
+  }else{
+    printf("  Not using addback.\n");
+  }
   if(fudgeFactor>1.0)
-  	printf("  WARNING: using fudge factor greater than 1.  This implies that the beam/compound sppeds up in the target, which should not be possible.\n");
+  	printf("  WARNING: using fudge factor greater than 1.  This implies that the beam/compound speeds up in the target, which should not be possible.\n");
   else
   	printf("  Using fudge factor of %f\n",fudgeFactor);
   printf("  Using gamma energy gate between %f and %f keV.\n",gateELow,gateEHigh);
@@ -508,38 +534,23 @@ int main(int argc, char *argv[])
   
   printf("\n");
   
-  sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0f_180gated.mca",avgGateE,gateWidth);
-  if((output=fopen(FileName,"w"))==NULL)
-    {
-      printf("ERROR!!! I cannot open the mca file!\n");
-      exit(EXIT_FAILURE);
+  int i;
+  for(i=0;i<numAngBins;i++){
+    if(i<100){
+      sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0f_%0.2fgated.mca",avgGateE,gateWidth,angleList[i]);
+      if((output=fopen(FileName,"w"))==NULL)
+        {
+          printf("ERROR!!! I cannot open the mca file: %s\n",FileName);
+          exit(EXIT_FAILURE);
+        }
+      fwrite(hist[i],S32K*sizeof(int),1,output);
+      fclose(output);
+      printf("Gated spectrum saved to file: %s\n",FileName);
     }
-  fwrite(hist,2*NRING*S32K*sizeof(int),1,output);
-  fclose(output);
-  printf("Gated spectrum saved to file: %s\n",FileName);
-  
-  sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0fgate.mca",avgGateE,gateWidth);
-  if((output=fopen(FileName,"w"))==NULL)
-    {
-      printf("ERROR!!! I cannot open the mca file!\n");
-      exit(EXIT_FAILURE);
-    }
-  fwrite(gatehist,2*NRING*S32K*sizeof(int),1,output);
-  fclose(output);
-  printf("Gate spectrum saved to file: %s\n",FileName);
-  
-  sprintf(FileName,"DS_ECalABSuppReconstructed_c%.0f_w%.0fproj.mca",avgGateE,gateWidth);
-  if((output=fopen(FileName,"w"))==NULL)
-    {
-      printf("ERROR!!! I cannot open the mca file!\n");
-      exit(EXIT_FAILURE);
-    }
-  fwrite(projhist,2*NRING*S32K*sizeof(int),1,output);
-  fclose(output);
-  printf("Projection spectrum saved to file: %s\n",FileName);
+  }
   
   /*theApp=new TApplication("App", &argc, argv);
-  canvas = new TCanvas("DS","DS",10,10, 500, 300);
+  canvas = new TCanvas("Angle","Angle",10,10, 500, 300);
   gPad->SetLogy(1);
   h->Draw();
   theApp->Run(kTRUE);*/

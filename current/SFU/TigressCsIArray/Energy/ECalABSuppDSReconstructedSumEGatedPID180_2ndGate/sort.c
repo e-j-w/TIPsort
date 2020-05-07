@@ -1,33 +1,53 @@
 #include "sort.h"
 /*=========================================================================*/
-int arePositionsAt180(int pos1, int pos2, int col1, int col2, int useAddBack){
+double getAngDeg(int pos1, int pos2, int col1, int col2, int useAddBack){
+
+  double pVec1[3], pVec2[3];
 
   if(useAddBack){
     //angles are between clovers, not cores
-    col1=0;
-    col2=1;
+    pVec1[0] = (cal_par->tg.tpos_xyz[pos1][0][0] + cal_par->tg.tpos_xyz[pos1][2][0])/2.;
+    pVec1[1] = (cal_par->tg.tpos_xyz[pos1][0][1] + cal_par->tg.tpos_xyz[pos1][2][1])/2.;
+    pVec1[2] = (cal_par->tg.tpos_xyz[pos1][0][2] + cal_par->tg.tpos_xyz[pos1][2][2])/2.;
+    pVec2[0] = (cal_par->tg.tpos_xyz[pos2][0][0] + cal_par->tg.tpos_xyz[pos2][2][0])/2.;
+    pVec2[1] = (cal_par->tg.tpos_xyz[pos2][0][1] + cal_par->tg.tpos_xyz[pos2][2][1])/2.;
+    pVec2[2] = (cal_par->tg.tpos_xyz[pos2][0][2] + cal_par->tg.tpos_xyz[pos2][2][2])/2.;
+  }else{
+    pVec1[0] = cal_par->tg.tpos_xyz[pos1][col1][0];
+    pVec1[1] = cal_par->tg.tpos_xyz[pos1][col1][1];
+    pVec1[2] = cal_par->tg.tpos_xyz[pos1][col1][2];
+    pVec2[0] = cal_par->tg.tpos_xyz[pos2][col2][0];
+    pVec2[1] = cal_par->tg.tpos_xyz[pos2][col2][1];
+    pVec2[2] = cal_par->tg.tpos_xyz[pos2][col2][2];
   }
 
-  double dp = cal_par->tg.tpos_xyz[pos1][col1][0]*cal_par->tg.tpos_xyz[pos2][col2][0];
-  dp += cal_par->tg.tpos_xyz[pos1][col1][1]*cal_par->tg.tpos_xyz[pos2][col2][1];
-  dp += cal_par->tg.tpos_xyz[pos1][col1][2]*cal_par->tg.tpos_xyz[pos2][col2][2];
-  double mag1 = cal_par->tg.tpos_xyz[pos1][col1][0]*cal_par->tg.tpos_xyz[pos1][col1][0];
-  mag1 += cal_par->tg.tpos_xyz[pos1][col1][1]*cal_par->tg.tpos_xyz[pos1][col1][1];
-  mag1 += cal_par->tg.tpos_xyz[pos1][col1][2]*cal_par->tg.tpos_xyz[pos1][col1][2];
+  double dp = pVec1[0]*pVec2[0];
+  dp += pVec1[1]*pVec2[1];
+  dp += pVec1[2]*pVec2[2];
+  double mag1 = pVec1[0]*pVec1[0];
+  mag1 += pVec1[1]*pVec1[1];
+  mag1 += pVec1[2]*pVec1[2];
   mag1 = sqrt(mag1);
-  double mag2 = cal_par->tg.tpos_xyz[pos2][col2][0]*cal_par->tg.tpos_xyz[pos2][col2][0];
-  mag2 += cal_par->tg.tpos_xyz[pos2][col2][1]*cal_par->tg.tpos_xyz[pos2][col2][1];
-  mag2 += cal_par->tg.tpos_xyz[pos2][col2][2]*cal_par->tg.tpos_xyz[pos2][col2][2];
+  double mag2 = pVec2[0]*pVec2[0];
+  mag2 += pVec2[1]*pVec2[1];
+  mag2 += pVec2[2]*pVec2[2];
   mag2 = sqrt(mag2);
   
   double ang = acos(dp/(mag1*mag2)); //from 0 to pi radians
+  ang = ang*360.0/TWOPI;
+  
+  return ang;
+}
+
+int arePositionsAt180(int pos1, int pos2, int col1, int col2, int useAddBack){
+
+  double ang = getAngDeg(pos1,pos2,col1,col2,useAddBack); //in degrees
 
   //check if angle is close to 180 degrees
-  if(ang > 3.0916){
+  if(ang > 179.){
     //printf("angle: %f, pos: %i %i, col: %i %i\n",ang,pos1,pos2,col1,col2);
     return 1;
   }
-  
   return 0;
 }
 

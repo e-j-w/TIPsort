@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
 
   fclose(cluster);
 
-	sprintf(mcaFile,"Ring_ECalABSuppSumEGated_c%.0f.mca",avgGateE);
+	sprintf(mcaFile,"Group_ECalABSuppSumEGated_c%.0f.mca",avgGateE);
   if((output=fopen(mcaFile,"w"))==NULL)
   	{
   	  printf("ERROR!!! I cannot open the output file: %s\n",mcaFile);
